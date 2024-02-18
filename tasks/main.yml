@@ -1,0 +1,99 @@
+- name: Create user groups
+  group:
+    name: "{{ sftp.group }}"
+    system: false
+  become: true
+
+- name: Create sftp users
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    group: "{{ sftp.group }}"
+    create_home: false
+    home: "/{{ sftp.home_name }}"
+    shell: "{{ sftp.shell }}"
+    system: false
+  loop: "{{ sftp.users }}"
+  become: true
+
+- name: Create sftp root directory
+  ansible.builtin.file:
+    path: "{{ sftp.root_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: u=rwx,g=rx,o=rx #!
+  become: true
+
+- name: Create users dirs
+  ansible.builtin.file:
+    path: "{{ sftp.root_dir }}/{{ item.name }}"
+    state: directory
+    group: root
+    owner: root
+    mode: u=rwx,g=rx,o=rx
+  loop: "{{ sftp.users }}"
+  become: true
+
+- name: Create users home dirs
+  ansible.builtin.file:
+    path: "{{ sftp.root_dir }}/{{ item.name }}/{{ sftp.home_name }}"
+    state: directory
+    owner: "{{ item.name }}"
+    group: "{{ sftp.group }}"
+    mode: u=rwx,g=rx,o=rx
+  loop: "{{ sftp.users }}"
+  become: true
+
+- name: Create users another dirs
+  ansible.builtin.file:
+    path: "{{ sftp.root_dir }}/{{ item.0.name }}/{{ item.1 }}"
+    state: directory
+    owner: "{{ item.0.name }}"
+    group: "{{ sftp.group }}"
+    mode: u=rwx,g=rx,o=rx
+  loop: "{{ sftp.users | subelements('dirs') }}"
+  become: true
+
+- name: "Create ~/.ssh dir"
+  file:
+    path: "{{ sftp.root_dir }}/{{ item.name }}/{{ sftp.home_name }}/.ssh"
+    owner: "{{ item.name }}"
+    group: "{{ sftp.group }}"
+    state: directory
+    mode: u=rwx,g=,o=
+  loop: "{{ sftp.users }}"
+  become: yes
+
+- name: "Add authorized keys for each user"
+  authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ item.ssh_key }}"
+    path: "{{ sftp.root_dir }}/{{ item.name }}/{{ sftp.home_name }}/.ssh/authorized_keys"
+  loop: "{{ sftp.users }}"
+  become: yes
+
+- name: Change SFTP configuration
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^(#\s*)?Subsystem[\s]+sftp.*'
+    line: Subsystem sftp internal-sftp
+    validate: /usr/sbin/sshd -T -f %s
+  notify: ssh_reload
+  become: true
+
+- name: Add SFTP users configuration
+  ansible.builtin.blockinfile:
+    path: /etc/ssh/sshd_config
+    marker: "# {mark} ANSIBLE MANAGED BLOCK sftp:{{ item.name }}"
+    block: |
+      Match Group {{ sftp.group }}
+        ChrootDirectory {{ sftp.root_dir }}/%u
+        ForceCommand internal-sftp
+        AuthorizedKeysFile {{ sftp.root_dir }}/{{ item.name }}/%h/.ssh/authorized_keys
+        PermitRootLogin no
+        PubkeyAuthentication yes
+        PasswordAuthentication no
+    validate: /usr/sbin/sshd -T -f %s
+  notify: ssh_reload
+  loop: "{{ sftp.users }}"
+  become: true

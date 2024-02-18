@@ -1,0 +1,5 @@
+sftp:
+  group: sftpstorage
+  home_name: home
+  root_dir: /sftp
+  shell: /sbin/nologin
