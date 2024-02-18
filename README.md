@@ -22,6 +22,12 @@ where
 - `user1`, `user2` - user dirs (configure with `sftp.users[0].name`)
 - `home` - users home dirs (configure name with `sftp.home_name`)
 - `media`, `docs` - users home dirs (configure with `sftp.users[0].dirs`)
+
+## Features
+- create home and additional user dirs
+- set ssh key for authentication
+- set custom permissions (mode) for directories
+
 ## Limitations
 - password authentication is not supported
 - no check for existing usernames on server. Check it yourself! Script will rewrite they if exist
@@ -50,12 +56,13 @@ where
                 ssh_key: |
                   ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDF9WjMaDHZ7Xz5224Zdvl+z1RA5zp09vkJ1IGcmBMv/0DANm4CyW2Cao2A1qdaqYPGqsGZeD+SNFMHilyvUbMS7uJJrLmZNp93N+gJPKLgvTw/+3z4zZ3frdSXCSNGKPF6yPifceUi9GjBroNv4EUAaY4nlVL44+K+TotvdwUuTn33kh1rXuksqgcoBcM8QdMkCLe5ErQPBxz1GrnI6oZPKCk0gqu84+uswWPE7bMyQyv/axroKoAaRglgjEeZTfS4pfpI5LCDPE4hErEKL9s4QXxTIiTDQaLjOIMHda+pGFVbvxGVjbZaiqJb3lctTWND+HLhgNe6jLuLJ7eznx3WNo3Xm0vKImNVnKrsiOVZspnykuR6EYKJPUi2UWkg05D2nDUmfkGIMk5DGIt83nYjyMuXT+F0+ZgK230PqlLgyD7SbmRZSH7c6GPuKWfgBHSro+5Uxy4hJS8oxmt3Li9fH/5JpOm1mZZiYmCeW5jvA75cuni3q846/VzvM8Hs0JM=
                 dirs:
-                  - media
+                  - name: media
               - name: user2
                 ssh_key: |
                   ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDF9WjMaDHZ7Xz5224Zdvl+z1RA5zp09vkJ1IGcmBMv/0DANm4CyW2Cao2A1qdaqYPGqsGZeD+SNFMHilyvUbMS7uJJrLmZNp93N+gJPKLgvTw/+3z4zZ3frdSXCSNGKPF6yPifceUi9GjBroNv4EUAaY4nlVL44+K+TotvdwUuTn33kh1rXuksqgcoBcM8QdMkCLe5ErQPBxz1GrnI6oZPKCk0gqu84+uswWPE7bMyQyv/axroKoAaRglgjEeZTfS4pfpI5LCDPE4hErEKL9s4QXxTIiTDQaLjOIMHda+pGFVbvxGVjbZaiqJb3lctTWND+HLhgNe6jLuLJ7eznx3WNo3Xm0vKImNVnKrsiOVZspnykuR6EYKJPUi2UWkg05D2nDUmfkGIMk5DGIt83nYjyMuXT+F0+ZgK230PqlLgyD7SbmRZSH7c6GPuKWfgBHSro+5Uxy4hJS8oxmt3Li9fH/5JpOm1mZZiYmCeW5jvA75cuni3q846/VzvM8Hs0JM=
                 dirs:
-                  - docs
+                  - name: docs
+                    mode: u=rwx,g=rx,o=
     ```
 5. Run with `ansible-playbook -i hosts playbook.yml`
 

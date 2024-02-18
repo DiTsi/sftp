@@ -46,11 +46,11 @@
 
 - name: Create users another dirs
   ansible.builtin.file:
-    path: "{{ sftp.root_dir }}/{{ item.0.name }}/{{ item.1 }}"
+    path: "{{ sftp.root_dir }}/{{ item.0.name }}/{{ item.1.name }}"
     state: directory
     owner: "{{ item.0.name }}"
     group: "{{ sftp.group }}"
-    mode: u=rwx,g=,o=
+    mode: "{{ item.1.mode | default('u=rwx,g=,o=') }}"
   loop: "{{ sftp.users | subelements('dirs') }}"
   become: true
 
