@@ -64,8 +64,8 @@
   loop: "{{ sftp.users }}"
   become: yes
 
-- name: "Add authorized keys for each user"
-  authorized_key:
+- name: Add authorized keys for each user
+  ansible.posix.authorized_key:
     user: "{{ item.name }}"
     key: "{{ item.ssh_key }}"
     path: "{{ sftp.root_dir }}/{{ item.name }}/{{ sftp.home_name }}/.ssh/authorized_keys"
